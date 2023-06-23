@@ -1,0 +1,6 @@
+namespace Deltix.Lang;
+
+[DecoratorUsage(ValidOn = { DecoratorTarget.CLASS })]
+decorator JsonIgnoreProperties {
+    Boolean IgnoreUnknown;
+}
