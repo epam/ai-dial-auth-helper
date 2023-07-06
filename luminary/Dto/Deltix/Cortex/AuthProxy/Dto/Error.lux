@@ -1,0 +1,16 @@
+namespace Deltix.Cortex.AuthProxy.Dto;
+
+import Deltix.Dto.*;
+
+/// Class that defines a body of any error.
+class Error {
+    /// Optional implementation-defined error status code that can help understand the reason of the error and, possibly, process it automatically.
+    ///
+    /// @documentationExample arbitrary_status_code
+    Text? StatusCode;
+
+    /// Human-readable error description.
+    ///
+    /// @documentationExample Error message
+    Text Message;
+}

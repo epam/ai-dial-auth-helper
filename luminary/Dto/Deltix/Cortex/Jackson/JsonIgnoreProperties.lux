@@ -1,4 +1,4 @@
-namespace Deltix.Lang;
+namespace Deltix.Cortex.Jackson;
 
 [DecoratorUsage(ValidOn = { DecoratorTarget.CLASS })]
 decorator JsonIgnoreProperties {
