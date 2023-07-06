@@ -2,7 +2,7 @@
   "namespaces" : [ {
     "namespace" : "Deltix.Cortex.AuthProxy.Dto",
     "package" : "deltix.cortex.authproxy.dto"
-  } ],
+  }],
   "classes" : {
     "annotations" : [
       "JsonIgnoreProperties",
@@ -12,7 +12,7 @@
       "Deprecated"
     ],
     "case" : "LOWER_UNDERSCORE",
-    "dtoPostfix" : ""
+    "dtoPostfix" : "Dto"
   },
   "enums": {
     "annotations" : [
@@ -24,7 +24,7 @@
     "case": "LOWER_UNDERSCORE"
   },
   "annotations" : [ {
-    "fullName" : "Deltix.Lang.JsonIgnoreProperties",
+    "fullName" : "Deltix.Cortex.Jackson.JsonIgnoreProperties",
     "package" : "com.fasterxml.jackson.annotation"
   }, {
     "fullName" : "Deltix.Lang.Deprecated",

@@ -1,0 +1,11 @@
+server:
+  hostUrl: "http://127.0.0.1"
+  port: 4088
+
+oauth2:
+  providerName: "auth0"
+  providerUri: "https://cryptocortex-dev.us.auth0.com/"
+  usernamePath: "/name"
+
+scheduled:
+  poolSize: 2

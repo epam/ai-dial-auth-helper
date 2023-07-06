@@ -4,6 +4,7 @@
 /build/
 /logs/
 /out/
+*.log
 
 ### IntelliJ IDEA ###
 .idea

@@ -1,10 +1,10 @@
 {
   "Sources": [
     {
-      "Directory" : "."
+      "Directory": "."
     }
   ],
-  "References" : [
+  "References": [
     "ProtocolGenerators.json"
   ]
 }

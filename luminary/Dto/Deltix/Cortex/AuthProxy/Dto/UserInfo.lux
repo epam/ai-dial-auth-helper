@@ -1,0 +1,11 @@
+namespace Deltix.Cortex.AuthProxy.Dto;
+
+import Deltix.Dto.*;
+
+/// UserInfo response.
+class UserInfo {
+    /// Name
+    ///
+    /// @documentationExample john
+    Text Name;
+}
