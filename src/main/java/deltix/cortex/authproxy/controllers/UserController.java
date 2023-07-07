@@ -60,7 +60,7 @@ public class UserController {
         }
     }
 
-    private DecodedJWT readToken(String authorization) throws JwkException, JsonProcessingException {
+    private DecodedJWT readToken(String authorization) throws JwkException {
         String token = Utils.getTokenFromAuth(authorization);
         DecodedJWT jwt = JWT.decode(token);
 
