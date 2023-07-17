@@ -1,5 +1,6 @@
 package deltix.cortex.authproxy.error;
 
+import com.auth0.jwk.JwkException;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -21,7 +22,9 @@ public class ExceptionToHttpStatusConverter {
             return HttpStatus.valueOf(wae.getResponse().getStatus());
         }
 
-        if (ex instanceof ConversionFailedException
+
+        if (ex instanceof JwkException
+                || ex instanceof ConversionFailedException
                 || ex instanceof IllegalArgumentException
                 || ex instanceof IllegalStateException
                 || ex instanceof MissingServletRequestParameterException)
