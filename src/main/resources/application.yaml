@@ -1,11 +1,11 @@
 server:
-  hostUrl: "http://127.0.0.1"
+  hostUrl: "https://auth-proxy.dev.tscrypto.io"
   port: 4088
 
 oauth2:
   providerName: "auth0"
-  providerUri: "https://cryptocortex-dev.us.auth0.com/"
-  usernamePath: "/name"
+  providerUri: "https://signin-stg-admin.tradestation.io"
+  usernamePath: "/http://tradestation.com/email"
 
 scheduled:
   poolSize: 2
