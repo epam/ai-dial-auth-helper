@@ -1,5 +1,5 @@
 server:
-  hostUrl: "https://auth-proxy.dev.tscrypto.io"
+  hostUrl: "http://cryptocortex-auth-proxy.deltix"
   port: 4088
 
 oauth2:
