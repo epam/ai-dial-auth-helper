@@ -5,7 +5,7 @@ server:
 oauth2:
   providerName: "auth0"
   providerUri: "https://signin-stg-admin.tradestation.io"
-  usernamePath: "/http://tradestation.com/email"
+  usernamePath: "http://tradestation.com/email"
 
 scheduled:
   poolSize: 2
