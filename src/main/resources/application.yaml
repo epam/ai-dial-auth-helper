@@ -5,7 +5,7 @@ server:
 oauth2:
   providerName: "auth0"
   providerUri: "https://cryptocortex-dev.us.auth0.com/"
-  usernamePath: "/name"
+  usernamePath: "name"
 
 scheduled:
   poolSize: 2

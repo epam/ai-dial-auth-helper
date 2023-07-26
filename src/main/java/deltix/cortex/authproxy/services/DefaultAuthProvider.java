@@ -71,7 +71,7 @@ public class DefaultAuthProvider implements AuthProvider {
         final String payloadJson = decodeToJson(decodedJWT.getPayload());
 
         JsonNode root = mapper.readTree(payloadJson);
-        JsonNode usernameNode = root.at(authProviderConfig.getUsernamePath());
+        JsonNode usernameNode = root.get(authProviderConfig.getUsernamePath());
 
         if (usernameNode.isMissingNode()) {
             throw new NotFoundException("Configured usernamePath does not exist in token payload");
