@@ -1,5 +1,5 @@
 server:
-  hostUrl: "http://127.0.0.1"
+  hostUrl: "http://cryptocortex-auth-proxy.deltix"
   port: 4088
 
 oauth2:
