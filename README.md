@@ -30,13 +30,11 @@ server:
 oauth2:
   providerName: "auth0" // The provider that is used
   providerUri: "https://cryptocortex-dev.us.auth0.com/" // Used for getting well-known and token verification URLs
-  usernamePath: "/name" // Path of the custom claim that contains username, the path is to be searched in AccessToken
+  usernamePath: "name" // Path of the custom claim that contains username, the path is to be searched in AccessToken
 
 scheduled:
   poolSize: 2
 ```
-
-Please ensure that the **usernamePath** is set to the path prefixed with "/", which should exactly match the configured custom claim in the AuthProvider.
 
 For example:
 
@@ -54,6 +52,6 @@ application.yaml:
 
 ```yaml
 ...
-userNamePath: "/name"
+userNamePath: "name"
 ...
 ```
