@@ -5,6 +5,7 @@ server:
 oauth2:
   providerName: "auth0"
   providerUri: "https://cryptocortex-dev.us.auth0.com/"
+  jwksUriPath: "jwks_uri"
   usernamePath: "name"
 
 scheduled:

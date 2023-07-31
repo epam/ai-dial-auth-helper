@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "oauth2")
 public class AuthProviderConfig {
     private String providerUri;
+    private String jwksUriPath;
     private String usernamePath;
 
     public String getProviderUri() {
@@ -15,6 +16,14 @@ public class AuthProviderConfig {
 
     public void setProviderUri(String providerUri) {
         this.providerUri = providerUri;
+    }
+
+    public String getJwksUriPath() {
+        return jwksUriPath;
+    }
+
+    public void setJwksUriPath(String jwksUriPath) {
+        this.jwksUriPath = jwksUriPath;
     }
 
     public String getUsernamePath() { return usernamePath; }
