@@ -1,9 +1,6 @@
 package deltix.cortex.authproxy.services;
 
-import com.auth0.jwk.Jwk;
-import com.auth0.jwk.JwkException;
-import com.auth0.jwk.JwkProvider;
-import com.auth0.jwk.JwkProviderBuilder;
+import com.auth0.jwk.*;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,10 +14,15 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 
 import static deltix.cortex.authproxy.utils.Utils.decodeToJson;
+import static deltix.cortex.authproxy.utils.Utils.isNullOrEmpty;
 
 @Service
 public class DefaultAuthProvider implements AuthProvider {
@@ -28,6 +30,7 @@ public class DefaultAuthProvider implements AuthProvider {
     private final ObjectMapper mapper = new ObjectMapper();
     private final AuthProviderConfig authProviderConfig;
     private final String openidConfigurationURL;
+    private final Object jwkProviderLock = new Object();
     private volatile String openIdConfiguration = null;
     private JwkProvider jwkProvider;
 
@@ -81,11 +84,50 @@ public class DefaultAuthProvider implements AuthProvider {
     }
 
     private JwkProvider getJwkProvider() {
-        if (this.jwkProvider == null) {
-            this.jwkProvider = new JwkProviderBuilder(authProviderConfig.getProviderUri()).build();
+        JwkProvider local = this.jwkProvider;
+
+        if (local == null) {
+            synchronized (jwkProviderLock) {
+                local = this.jwkProvider;
+                if (local == null) {
+                    if (!isNullOrEmpty(this.authProviderConfig.getJwksUriPath())) {
+                        try {
+                            ResponseEntity<String> openIdConfiguration = this.getOpenidConfiguration();
+                            if (openIdConfiguration.getStatusCode() == HttpStatus.OK) {
+                                JsonNode root = mapper.readTree(openIdConfiguration.getBody());
+                                JsonNode jwksUriNode = root.get(this.authProviderConfig.getJwksUriPath());
+
+                                if (!jwksUriNode.isMissingNode()) {
+                                    local = new JwkProviderBuilder(this.buildJwkUrl(jwksUriNode.textValue())).build();
+                                }
+                            }
+
+                        } catch (JsonProcessingException ignore) {}
+                    }
+
+                    if (local == null) {
+                        local = new JwkProviderBuilder(this.authProviderConfig.getProviderUri()).build();
+                    }
+
+                    this.jwkProvider = local;
+                }
+            }
         }
 
-        return this.jwkProvider;
+        return local;
+    }
+
+    private URL buildJwkUrl(String jwksUri) {
+        if (isNullOrEmpty(jwksUri)) {
+            throw new IllegalStateException("Invalid jwks uri");
+        }
+
+        try {
+            final URI uri = new URI(jwksUri).normalize();
+            return uri.toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid jwks uri", e);
+        }
     }
 
     private <TRequest, TResponse> ResponseEntity<TResponse> tryExchange(String uri, HttpMethod method, TRequest request, Class<TResponse> responseClass, String bearerToken, Object... uriVariables) {
