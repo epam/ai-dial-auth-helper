@@ -50,7 +50,7 @@ public class WellKnownController {
                 return new ResponseEntity<>(openIdConfiguration.getBody(), openIdConfiguration.getStatusCode());
 
             JsonNode root = mapper.readTree(openIdConfiguration.getBody());
-            String ret = mapper.writeValueAsString(((ObjectNode) root).put("userinfo_endpoint", serverConfig.getHostUrl() + ":" + serverConfig.getPort() + "/" + "api/v1/user/user-info"));
+            String ret = mapper.writeValueAsString(((ObjectNode) root).put("userinfo_endpoint", serverConfig.getHostUrl() + "/api/v1/user/user-info"));
 
             return new ResponseEntity<>(ret, HttpStatus.OK);
         } catch (RestClientResponseException e) {
