@@ -1,9 +1,6 @@
 package deltix.cortex.authproxy.services;
 
-import com.auth0.jwk.Jwk;
-import com.auth0.jwk.JwkException;
-import com.auth0.jwk.JwkProvider;
-import com.auth0.jwk.JwkProviderBuilder;
+import com.auth0.jwk.*;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,6 +14,10 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 
@@ -82,10 +83,24 @@ public class DefaultAuthProvider implements AuthProvider {
 
     private JwkProvider getJwkProvider() {
         if (this.jwkProvider == null) {
-            this.jwkProvider = new JwkProviderBuilder(authProviderConfig.getProviderUri()).build();
+            this.jwkProvider = new JwkProviderBuilder(this.buildJwkUrl()).build();
         }
 
         return this.jwkProvider;
+    }
+
+    private URL buildJwkUrl() {
+        String providerUri = authProviderConfig.getProviderUri();
+        if (providerUri == null || providerUri.isEmpty()) {
+            throw new IllegalStateException("Provider Uri is not configured");
+        }
+
+        try {
+            final URI uri = new URI(providerUri).normalize();
+            return uri.toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid jwks uri", e);
+        }
     }
 
     private <TRequest, TResponse> ResponseEntity<TResponse> tryExchange(String uri, HttpMethod method, TRequest request, Class<TResponse> responseClass, String bearerToken, Object... uriVariables) {
