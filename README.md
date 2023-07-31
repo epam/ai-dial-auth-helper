@@ -24,12 +24,13 @@ Currently, AuthProxy provides two public routes:
 
 ```yaml
 server:
-  hostUrl: "http://127.0.0.1" // Used for WellKnown userinfo_endpoint substitution
+  hostUrl: "http://127.0.0.1" // Used for WellKnown userinfo_endpoint substitution, it must be complete domain url with port. 
   port: 4088 // Spring port used to start up the application
 
 oauth2:
   providerName: "auth0" // The provider that is used
   providerUri: "https://cryptocortex-dev.us.auth0.com/" // Used for getting well-known and token verification URLs
+  jwksUriPath: "jwks_uri" // Path of custom jwks_uri node in openid-configuration, Optional.
   usernamePath: "name" // Path of the custom claim that contains username, the path is to be searched in AccessToken
 
 scheduled:

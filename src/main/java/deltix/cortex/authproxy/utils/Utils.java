@@ -21,4 +21,8 @@ public class Utils {
     public static String decodeToJson(final String base64){
         return StringUtils.newStringUtf8(Base64.decodeBase64(base64));
     }
+
+    public static boolean isNullOrEmpty(String s) {
+        return s == null || s.isEmpty();
+    }
 }

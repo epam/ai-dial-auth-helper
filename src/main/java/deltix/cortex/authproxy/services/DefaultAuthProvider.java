@@ -22,6 +22,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 
 import static deltix.cortex.authproxy.utils.Utils.decodeToJson;
+import static deltix.cortex.authproxy.utils.Utils.isNullOrEmpty;
 
 @Service
 public class DefaultAuthProvider implements AuthProvider {
@@ -29,6 +30,7 @@ public class DefaultAuthProvider implements AuthProvider {
     private final ObjectMapper mapper = new ObjectMapper();
     private final AuthProviderConfig authProviderConfig;
     private final String openidConfigurationURL;
+    private final Object jwkProviderLock = new Object();
     private volatile String openIdConfiguration = null;
     private JwkProvider jwkProvider;
 
@@ -82,21 +84,46 @@ public class DefaultAuthProvider implements AuthProvider {
     }
 
     private JwkProvider getJwkProvider() {
-        if (this.jwkProvider == null) {
-            this.jwkProvider = new JwkProviderBuilder(this.buildJwkUrl()).build();
+        JwkProvider local = this.jwkProvider;
+
+        if (local == null) {
+            synchronized (jwkProviderLock) {
+                local = this.jwkProvider;
+                if (local == null) {
+                    if (!isNullOrEmpty(this.authProviderConfig.getJwksUriPath())) {
+                        try {
+                            ResponseEntity<String> openIdConfiguration = this.getOpenidConfiguration();
+                            if (openIdConfiguration.getStatusCode() == HttpStatus.OK) {
+                                JsonNode root = mapper.readTree(openIdConfiguration.getBody());
+                                JsonNode jwksUriNode = root.get(this.authProviderConfig.getJwksUriPath());
+
+                                if (!jwksUriNode.isMissingNode()) {
+                                    local = new JwkProviderBuilder(this.buildJwkUrl(jwksUriNode.textValue())).build();
+                                }
+                            }
+
+                        } catch (JsonProcessingException ignore) {}
+                    }
+
+                    if (local == null) {
+                        local = new JwkProviderBuilder(this.authProviderConfig.getProviderUri()).build();
+                    }
+
+                    this.jwkProvider = local;
+                }
+            }
         }
 
-        return this.jwkProvider;
+        return local;
     }
 
-    private URL buildJwkUrl() {
-        String providerUri = authProviderConfig.getProviderUri();
-        if (providerUri == null || providerUri.isEmpty()) {
-            throw new IllegalStateException("Provider Uri is not configured");
+    private URL buildJwkUrl(String jwksUri) {
+        if (isNullOrEmpty(jwksUri)) {
+            throw new IllegalStateException("Invalid jwks uri");
         }
 
         try {
-            final URI uri = new URI(providerUri).normalize();
+            final URI uri = new URI(jwksUri).normalize();
             return uri.toURL();
         } catch (MalformedURLException | URISyntaxException e) {
             throw new IllegalArgumentException("Invalid jwks uri", e);
