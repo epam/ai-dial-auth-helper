@@ -8,4 +8,20 @@ class UserInfo {
     ///
     /// @documentationExample john
     Text Name;
+
+    /// Email
+    ///
+    /// @documentationExample smith.john@mail.com
+    Text Email;
+
+    /// Image
+    ///
+    /// @documentationExample URL to photo or data URL
+    Text Photo;
+
+    /// JobTitle
+    ///
+    /// @documentationExample software engineer
+    Text JobTitle;
+
 }

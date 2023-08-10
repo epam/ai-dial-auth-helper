@@ -3,9 +3,10 @@ server:
   port: 4088
 
 oauth2:
-  providerName: "auth0"
-  providerUri: "https://cryptocortex-dev.us.auth0.com/"
-  usernamePath: "name"
+  providerUri: "https://kc.staging.deltixhub.io/realms/DIAL"
+  clientId: "chatbot-ui"
+  clientSecret: "iyJdFnZGxNPBg3XXfOR5Nkbpj42cwPeN"
+  jwksUriPath: "jwks_uri"
 
 scheduled:
   poolSize: 2
