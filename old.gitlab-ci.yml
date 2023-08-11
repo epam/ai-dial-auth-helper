@@ -1,0 +1,182 @@
+variables:
+  TOOLS_IMAGE: registry-dev.deltixhub.com/deltix.docker/devops/tools:0.105-master
+  JAVA_IMAGE: registry-dev.deltixhub.com/gitlabci.docker/openjdk11-gradle:7.4.2
+  DOCKER_COMMON_PATH: "/deltix.docker/cortex/"
+  PROJECT_NAME: "auth-proxy"
+
+image: ${TOOLS_IMAGE}
+
+stages:
+  - prepare
+  - build
+  - security
+  - publish
+  - promote
+
+prepare:
+  stage: prepare
+  script:
+    - git fetch --tags
+    - ver=$(echo -n $CI_COMMIT_REF_NAME | cut -f 2 -d '-') || ver=1.0
+    - version_snapshot=`cat VERSION`
+    - minor_tag=`echo $version_snapshot | perl -pe 's/^((\d+\.)*)(\d+)(.*)$/($3)/e'` || minor_tag=0
+    - release_tag=${ver}.$((minor_tag+1))
+    ###### Change version in all files here
+    - sed -i "s/$version_snapshot/$release_tag/" VERSION
+
+    ######
+    - git remote set-url origin https://$GITLAB_ROBOT_NAME:$CI_GIT_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git
+    - git config user.name $GITLAB_ROBOT_NAME
+    - git config user.email ${GITLAB_ROBOT_EMAIL}
+    - git diff --quiet && git diff --staged --quiet || git commit -am "RobotBuild ${release_tag}"
+    - git tag ${release_tag}
+    - git push origin HEAD:${CI_COMMIT_REF_NAME} --tags
+  cache: {}
+  dependencies: []
+  rules:
+    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+  tags:
+    - kubernetes
+
+"Build Java":
+  stage: build
+  image: ${JAVA_IMAGE}
+  script:
+    - ./gradlew installDist --parallel
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build/*
+  tags:
+    - AWS
+    - Linux
+    - DockerExecutor
+  cache:
+    key: ${PROJECT_NAME}"-gradle-java"
+    paths:
+      - /root/.gradle/caches
+    policy: pull-push
+  rules:
+    - if: "$CI_COMMIT_MESSAGE =~ /^RobotBuild/ && $CI_COMMIT_REF_SLUG =~ /^release-/"
+      when: never
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event'"
+      when: never
+    - when: always
+
+"Dependency Check: Java":
+  stage: security
+  image: ${JAVA_IMAGE}
+  script:
+#    - ./gradlew -PfailOnHighCVSS=true dependencyCheckAggregate
+    - ./gradlew dependencyCheckAggregate
+  artifacts:
+    paths:
+      - build/reports/dependency-check-report.html
+  tags:
+    - AWS
+    - Linux
+    - DockerExecutor
+  cache:
+    key: ${PROJECT_NAME}"-gradle-java"
+    paths:
+      - /root/.gradle/caches
+    policy: pull-push
+  rules:
+    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+
+"Static Check: Java":
+  stage: security
+  image: ${JAVA_IMAGE}
+  script:
+#    - ./gradlew -PfailOnSpotBugs check -x test
+    - ./gradlew check -x test --parallel
+    - ./gradlew collectSpotbugs
+  artifacts:
+    paths:
+      - build/reports/spotbugs
+  tags:
+    - AWS
+    - Linux
+    - DockerExecutor
+  cache:
+    key: ${PROJECT_NAME}"-gradle-java"
+    paths:
+      - /root/.gradle/caches
+    policy: pull-push
+  rules:
+    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+
+"License Check: Java":
+  stage: security
+  image: ${JAVA_IMAGE}
+  script:
+    - ./gradlew downloadLicenses
+  artifacts:
+    paths:
+      - build/reports/license/license-dependency.html
+  tags:
+    - AWS
+    - Linux
+    - DockerExecutor
+  cache:
+    key: ${PROJECT_NAME}"-gradle-java"
+    paths:
+      - /root/.gradle/caches
+    policy: pull-push
+  rules:
+    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+
+"Docker Scan":
+  stage: security
+  image: ${JAVA_IMAGE}
+  dependencies:
+    - "Build Java"
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  before_script:
+    - export TRIVY_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    - echo $TRIVY_VERSION
+    - wget --no-verbose https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz -O - | tar -zxvf -
+  allow_failure: true
+  script:
+    - ./gradlew dockerBuildImage -x test -x build -x generate -x compileJava
+    - VERSION_SNAPSHOT=`cat VERSION`
+    - ./trivy image --exit-code 0 --format template --template "@contrib/gitlab-codequality.tpl" -o ${PROJECT_NAME}.json ${ARTIFACTORY_DOCKER_DEV_REPOSITORY}${DOCKER_COMMON_PATH}${PROJECT_NAME}:${VERSION_SNAPSHOT}
+  artifacts:
+    reports:
+      codequality: ${PROJECT_NAME}.json
+  tags:
+    - AWS
+    - Linux
+    - DockerExecutor
+  cache:
+    key: ${PROJECT_NAME}"-gradle-java"
+    paths:
+      - /root/.gradle/caches
+    policy: pull
+  when: manual
+
+"Publish Docker":
+  stage: publish
+  image: ${JAVA_IMAGE}
+  dependencies:
+    - "Build Java"
+  script:
+    - time ./gradlew dockerPublishImage -x test -x build -x generate -x compileJava
+  tags:
+    - AWS
+    - Linux
+    - ShellExecutor
+  rules:
+    - if: "$CI_COMMIT_TAG"
+  cache:
+    key: ${PROJECT_NAME}"-gradle-java"
+    paths:
+      - /root/.gradle/caches
+    policy: pull
