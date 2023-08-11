@@ -1,5 +1,5 @@
 server:
-  hostUrl: "http://cryptocortex-auth-proxy.deltix"
+  hostUrl: "http://dial-auth-proxy"
   port: 4088
 
 oauth2:

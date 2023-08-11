@@ -1,7 +1,7 @@
 FROM amazoncorretto:11-alpine3.17
 
 ARG version
-ARG project=auth-proxy
+ARG project=dial-auth-proxy
 ENV project=${project}
 
 COPY ./$project /opt/deltix/$project
