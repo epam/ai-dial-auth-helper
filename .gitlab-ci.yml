@@ -1,42 +1,82 @@
-variables:
-  TOOLS_IMAGE: registry-dev.deltixhub.com/deltix.docker/devops/tools:0.105-master
-  JAVA_IMAGE: registry-dev.deltixhub.com/gitlabci.docker/openjdk11-gradle:7.4.2
-  DOCKER_COMMON_PATH: "/deltix.docker/cortex/"
-  PROJECT_NAME: "auth-proxy"
+include:
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  - project: Gitlab/ci
+    ref: 0.2.22
+    file: helm/helm-environment.gitlab-ci.yml
 
-image: ${TOOLS_IMAGE}
+variables:
+  DOCKER_PATH: "ai/dial/dial-authproxy"
+  DOCKER_REGISTRY_SERVER: "registry-dev.deltixhub.com"
+  HELM_REPO: https://nexus.deltixhub.com/repository/epm-rtc-helm
+  SECRET_NAME: "epm-rtc-registry-dev"
+  CHART: "dial-application" # Helm chart name, e.g. "gitlab-runner"
+  VERSION: "0.1.2" # Helm chart version
+  NAMESPACE: ${CI_PROJECT_NAME}
+  HELM_EXTRA_ARGS: "-f ${HELM_SECRET_FILE}"
+  RELEASE: ${CI_PROJECT_NAME}
+  DOCKERFILE_PATH: "./src/main/docker"
+
+  development_ENV_ID: "staging"
+  development_HELM_VALUES_FILE: "helm/development.yaml"
+  development_ENV_URL: "https://dial-authproxy.staging.deltixhub.io"
+  development_AWS_ACCESS_KEY_ID: ${staging_AWS_ACCESS_KEY_ID}
+  development_AWS_SECRET_ACCESS_KEY: ${staging_AWS_SECRET_ACCESS_KEY}
+
+  staging_DEPLOY_ENV: "false"
+
+  review_DEPLOY_ENV: "true"
+  review_ENV_ID: "staging"
+  review_HELM_VALUES_FILE: "helm/review.yaml"
+  review_ENV_URL: "https://${CI_PROJECT_NAME}-mr-${CI_MERGE_REQUEST_IID}.staging.deltixhub.io"
+  review_HELM_CUSTOM_VALUES: "ingress.hosts[0]=${CI_PROJECT_NAME}-mr-${CI_MERGE_REQUEST_IID}.staging.deltixhub.io,fullnameOverride=mr-${CI_MERGE_REQUEST_IID},image.tag=mr-${CI_MERGE_REQUEST_IID},env.SERVER_HOSTURL=mr-${CI_MERGE_REQUEST_IID}.${NAMESPACE}"
+  review_RELEASE: ${CI_PROJECT_NAME}-mr-${CI_MERGE_REQUEST_IID}
+  review_SECRET_NAME: "epm-rtc-registry-test"
+  review_DOCKER_REGISTRY_SERVER: "registry-test.deltixhub.com"
+
+  JAVA_IMAGE: registry-dev.deltixhub.com/gitlabci.docker/openjdk11-gradle:7.4.2
+  PROJECT_NAME: "dial-auth-proxy"
 
 stages:
-  - prepare
+  - tag
   - build
-  - security
-  - publish
-  - promote
+  - publish # publush docker images
+  - deploy
+  - promote # copy docker image to public repo
+  - production # Stage name used in include. Not used. ToDo - delete this
 
-prepare:
-  stage: prepare
-  script:
-    - git fetch --tags
-    - ver=$(echo -n $CI_COMMIT_REF_NAME | cut -f 2 -d '-') || ver=1.0
-    - version_snapshot=`cat VERSION`
-    - minor_tag=`echo $version_snapshot | perl -pe 's/^((\d+\.)*)(\d+)(.*)$/($3)/e'` || minor_tag=0
-    - release_tag=${ver}.$((minor_tag+1))
-    ###### Change version in all files here
-    - sed -i "s/$version_snapshot/$release_tag/" VERSION
-
-    ######
-    - git remote set-url origin https://$GITLAB_ROBOT_NAME:$CI_GIT_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git
-    - git config user.name $GITLAB_ROBOT_NAME
-    - git config user.email ${GITLAB_ROBOT_EMAIL}
-    - git diff --quiet && git diff --staged --quiet || git commit -am "RobotBuild ${release_tag}"
-    - git tag ${release_tag}
-    - git push origin HEAD:${CI_COMMIT_REF_NAME} --tags
-  cache: {}
-  dependencies: []
+deploy_development:
+  image: "registry.deltixhub.com/deltix.docker/devops/kubernetes-tools:0.17.1"
+  stage: deploy
   rules:
-    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
-  tags:
-    - kubernetes
+    - if: $CI_COMMIT_BRANCH == "development"
+
+destroy_development:
+  image: "registry.deltixhub.com/deltix.docker/devops/kubernetes-tools:0.17.1"
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: manual
+      allow_failure: true
+
+deploy_staging:
+  stage: deploy
+
+destroy_staging:
+  stage: deploy
+
+deploy_review:
+  image: "registry.deltixhub.com/deltix.docker/devops/kubernetes-tools:0.17.1"
+  stage: deploy
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development" && $review_DEPLOY_ENV == "true"'
+
+destroy_review:
+  image: "registry.deltixhub.com/deltix.docker/devops/kubernetes-tools:0.17.1"
+  stage: deploy
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development" && $review_DEPLOY_ENV == "true"'
+      when: manual
+      allow_failure: true
 
 "Build Java":
   stage: build
@@ -47,24 +87,114 @@ prepare:
     expire_in: 1 day
     paths:
       - build/*
-  tags:
-    - AWS
-    - Linux
-    - DockerExecutor
   cache:
     key: ${PROJECT_NAME}"-gradle-java"
     paths:
       - /root/.gradle/caches
     policy: pull-push
   rules:
-    - if: "$CI_COMMIT_MESSAGE =~ /^RobotBuild/ && $CI_COMMIT_REF_SLUG =~ /^release-/"
-      when: never
-    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event'"
-      when: never
-    - when: always
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH  == "development"
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"'
+  tags:
+    - AWS
+    - DockerExecutor
+
+publish:
+  image: dockerhub.deltixhub.com/docker:23.0.6
+  stage: publish
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  cache: {}
+  services:
+    - docker:23.0.6-dind
+  before_script:
+    - mkdir -p $HOME/.docker
+    # Use DOCKER_AUTH_CONFIG for login to deltix repo
+    - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
+  script:
+    - imageUrl=$REPOSITORY/${DOCKER_PATH}
+    - docker build -t $imageUrl:${DOCKER_TAG} -t $imageUrl:${DOCKER_ADDITIONAL_TAG} -f ${DOCKERFILE_PATH}/Dockerfile .
+    - docker push $imageUrl:${DOCKER_TAG}
+    - docker push $imageUrl:${DOCKER_ADDITIONAL_TAG}
+  rules:
+    - if: $CI_COMMIT_TAG
+      variables:
+        DOCKER_TAG: ${CI_COMMIT_TAG}
+        DOCKER_ADDITIONAL_TAG: latest
+        REPOSITORY: ${ARTIFACTORY_DOCKER_DEV_REPOSITORY}
+    - if: $CI_COMMIT_BRANCH  == "development"
+      variables:
+        DOCKER_TAG: ${CI_COMMIT_REF_SLUG}
+        DOCKER_ADDITIONAL_TAG: alpha
+        REPOSITORY: ${ARTIFACTORY_DOCKER_DEV_REPOSITORY}
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"'
+      variables:
+        DOCKER_TAG: gitlab-mr${CI_MERGE_REQUEST_ID}
+        DOCKER_ADDITIONAL_TAG: mr-${CI_MERGE_REQUEST_IID}
+        REPOSITORY: ${ARTIFACTORY_DOCKER_TEST_REPOSITORY}
+  tags:
+    - AWS
+    - DockerExecutor
+
+"Tag branch":
+  image: alpine/git:v2.32.0
+  stage: tag
+  script:
+    - ver=$(echo -n $CI_COMMIT_REF_NAME | cut -f 2 -d '-') || ver=0.0
+    - minor_tag=$(git describe --abbrev=0 --tags | cut -f 3 -d '.') || minor_tag=0
+    - release_tag=${ver}.$(( minor_tag+1 ))
+    - git remote set-url origin https://$GITLAB_ROBOT_NAME:$GITLAB_ROBOT_PUSH_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git
+    - git config user.name $GITLAB_ROBOT_NAME
+    - git config user.email ${GITLAB_ROBOT_EMAIL}
+    - git diff --quiet && git diff --staged --quiet || git commit -am "RobotBuild ${release_tag}"
+    - git tag ${release_tag}
+    - git push origin HEAD:${CI_COMMIT_REF_NAME} --tags
+  dependencies: []
+  rules:
+    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+  tags:
+    - kubernetes
+
+container_scanning:
+  stage: promote
+  variables:
+    GIT_STRATEGY: none
+    CS_IMAGE: ${ARTIFACTORY_DOCKER_DEV_REPOSITORY}/${DOCKER_PATH}:$CI_COMMIT_TAG
+    CS_REGISTRY_USER: ${ARTIFACTORY_USER}
+    CS_REGISTRY_PASSWORD: ${ARTIFACTORY_PASS}
+  dependencies: []
+  rules:
+    - if: $CI_COMMIT_TAG
+  tags:
+    - AWS
+    - DockerExecutor
+
+### Copy frontend and backend docker images to public repository. Run on git tag manually
+promote:
+  image: dockerhub.deltixhub.com/curlimages/curl:7.88.1
+  stage: promote
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - 'curl --retry 6 --retry-all-errors --no-progress-meter --fail -X POST "${ARTIFACTORY_URL}/api/docker/epm-rtc-docker/v2/promote" -H "Content-Type: application/json" -u${ARTIFACTORY_USER}:${ARTIFACTORY_PASS} -d ''{ "targetRepo": "epm-rtc-public-docker", "dockerRepository": "''"${DOCKER_PATH}"''", "tag" : "''"$CI_COMMIT_TAG"''", "copy": true }'''
+    - >
+      if [ ! -z "$DOCKER_ADDITIONAL_TAG" ]; then
+      curl --retry 6 --retry-all-errors --no-progress-meter --fail -X POST "${ARTIFACTORY_URL}/api/docker/epm-rtc-docker/v2/promote" -H "Content-Type: application/json" -u${ARTIFACTORY_USER}:${ARTIFACTORY_PASS} -d '{ "targetRepo": "epm-rtc-public-docker", "dockerRepository": '\"${DOCKER_PATH}\"', "tag" : '\"$DOCKER_ADDITIONAL_TAG\"', "copy": true }';
+      fi
+  dependencies: []
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+      variables:
+        DOCKER_ADDITIONAL_TAG: latest
+  tags:
+    - AWS
+    - DockerExecutor
 
 "Dependency Check: Java":
-  stage: security
+  stage: promote
   image: ${JAVA_IMAGE}
   script:
 #    - ./gradlew -PfailOnHighCVSS=true dependencyCheckAggregate
@@ -72,20 +202,20 @@ prepare:
   artifacts:
     paths:
       - build/reports/dependency-check-report.html
-  tags:
-    - AWS
-    - Linux
-    - DockerExecutor
   cache:
     key: ${PROJECT_NAME}"-gradle-java"
     paths:
       - /root/.gradle/caches
     policy: pull-push
+  dependencies: []
   rules:
-    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+    - if: $CI_COMMIT_TAG
+  tags:
+    - AWS
+    - DockerExecutor
 
 "Static Check: Java":
-  stage: security
+  stage: promote
   image: ${JAVA_IMAGE}
   script:
 #    - ./gradlew -PfailOnSpotBugs check -x test
@@ -94,89 +224,34 @@ prepare:
   artifacts:
     paths:
       - build/reports/spotbugs
-  tags:
-    - AWS
-    - Linux
-    - DockerExecutor
   cache:
     key: ${PROJECT_NAME}"-gradle-java"
     paths:
       - /root/.gradle/caches
     policy: pull-push
+  dependencies: []
   rules:
-    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+    - if: $CI_COMMIT_TAG
+  tags:
+    - AWS
+    - DockerExecutor
 
 "License Check: Java":
-  stage: security
+  stage: promote
   image: ${JAVA_IMAGE}
   script:
     - ./gradlew downloadLicenses
   artifacts:
     paths:
       - build/reports/license/license-dependency.html
-  tags:
-    - AWS
-    - Linux
-    - DockerExecutor
   cache:
     key: ${PROJECT_NAME}"-gradle-java"
     paths:
       - /root/.gradle/caches
     policy: pull-push
+  dependencies: []
   rules:
-    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
-
-"Docker Scan":
-  stage: security
-  image: ${JAVA_IMAGE}
-  dependencies:
-    - "Build Java"
-  variables:
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-  services:
-    - name: docker:dind
-      entrypoint: ["env", "-u", "DOCKER_HOST"]
-      command: ["dockerd-entrypoint.sh"]
-  before_script:
-    - export TRIVY_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-    - echo $TRIVY_VERSION
-    - wget --no-verbose https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz -O - | tar -zxvf -
-  allow_failure: true
-  script:
-    - ./gradlew dockerBuildImage -x test -x build -x generate -x compileJava
-    - VERSION_SNAPSHOT=`cat VERSION`
-    - ./trivy image --exit-code 0 --format template --template "@contrib/gitlab-codequality.tpl" -o ${PROJECT_NAME}.json ${ARTIFACTORY_DOCKER_DEV_REPOSITORY}${DOCKER_COMMON_PATH}${PROJECT_NAME}:${VERSION_SNAPSHOT}
-  artifacts:
-    reports:
-      codequality: ${PROJECT_NAME}.json
+    - if: $CI_COMMIT_TAG
   tags:
     - AWS
-    - Linux
     - DockerExecutor
-  cache:
-    key: ${PROJECT_NAME}"-gradle-java"
-    paths:
-      - /root/.gradle/caches
-    policy: pull
-  when: manual
-
-"Publish Docker":
-  stage: publish
-  image: ${JAVA_IMAGE}
-  dependencies:
-    - "Build Java"
-  script:
-    - time ./gradlew dockerPublishImage -x test -x build -x generate -x compileJava
-  tags:
-    - AWS
-    - Linux
-    - ShellExecutor
-  rules:
-    - if: "$CI_COMMIT_TAG"
-  cache:
-    key: ${PROJECT_NAME}"-gradle-java"
-    paths:
-      - /root/.gradle/caches
-    policy: pull
