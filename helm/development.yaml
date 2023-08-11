@@ -40,7 +40,7 @@ ingress:
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/group.name: "allow-all"
   hosts:
-    - https://dial-authproxy.staging.deltixhub.io
+    - dial-authproxy.staging.deltixhub.io
 
 env:
   SERVER_HOSTURL: "http://dial-authproxy.dial-authproxy"
