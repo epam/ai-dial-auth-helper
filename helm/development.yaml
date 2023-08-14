@@ -43,5 +43,5 @@ ingress:
     - dial-authproxy.staging.deltixhub.io
 
 env:
-  SERVER_HOSTURL: "http://dial-authproxy.dial-authproxy"
+  SERVER_HOSTURL: "https://dial-authproxy.staging.deltixhub.io"
   OAUTH2_PROVIDERURI: "https://kc.staging.deltixhub.io/realms/DIAL"
