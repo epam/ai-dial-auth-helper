@@ -63,6 +63,7 @@ public class UserController {
             IdentityProvider identityProvider = IdentityProviderFactory.createIdentityProvider(idpClaim.asString());
             String idpAccessToken = authProvider.exchangeToken(token, idpAliasClaim.asString());
             UserInfoDto userInfo = identityProvider.getUserInfo(idpAccessToken);
+            userInfo.setSub(decodedJWT.getSubject());
 
             return new ResponseEntity<>(userInfo, HttpStatus.OK);
         } catch (Throwable e) {

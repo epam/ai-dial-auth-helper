@@ -14,14 +14,19 @@ class UserInfo {
     /// @documentationExample smith.john@mail.com
     Text Email;
 
-    /// Image
+    /// Picture
     ///
-    /// @documentationExample URL to photo or data URL
-    Text Photo;
+    /// @documentationExample URL to user picture or data URL
+    Text Picture;
 
     /// JobTitle
     ///
     /// @documentationExample software engineer
     Text JobTitle;
+
+    /// Sub
+    ///
+    /// @documentationExample subject ID
+    Text Sub;
 
 }

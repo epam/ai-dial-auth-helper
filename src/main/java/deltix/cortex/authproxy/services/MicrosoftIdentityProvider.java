@@ -34,7 +34,7 @@ public class MicrosoftIdentityProvider implements IdentityProvider {
         }
         UserInfoDto userInfo = new UserInfoDto();
         String photo = getUserPhoto(accessToken);
-        userInfo.setPhoto(photo);
+        userInfo.setPicture(photo);
         userInfo.setJobTitle(root.get("jobTitle").textValue());
         userInfo.setEmail(root.get("mail").textValue());
         userInfo.setName(root.get("displayName").textValue());
