@@ -1,11 +1,12 @@
 server:
-  hostUrl: "http://cryptocortex-auth-proxy.deltix"
+  hostUrl: "http://dial-auth-proxy"
   port: 4088
 
 oauth2:
-  providerName: "auth0"
-  providerUri: "https://signin-stg-admin.tradestation.io"
-  usernamePath: "http://tradestation.com/email"
+  providerUri: "https://kc.staging.deltixhub.io/realms/DIAL"
+  clientId: "chatbot-ui"
+  clientSecret: "iyJdFnZGxNPBg3XXfOR5Nkbpj42cwPeN"
+  jwksUriPath: "jwks_uri"
 
 scheduled:
   poolSize: 2

@@ -10,6 +10,10 @@ public class AuthProviderConfig {
     private String jwksUriPath;
     private String usernamePath;
 
+    private String clientId;
+
+    private String clientSecret;
+
     public String getProviderUri() {
         return providerUri;
     }
@@ -30,5 +34,23 @@ public class AuthProviderConfig {
 
     public void setUsernamePath(String usernamePath) {
         this.usernamePath = usernamePath;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public AuthProviderConfig setClientId(String clientId) {
+        this.clientId = clientId;
+        return this;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public AuthProviderConfig setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+        return this;
     }
 }

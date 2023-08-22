@@ -1,11 +1,11 @@
 FROM amazoncorretto:11-alpine3.17
 
 ARG version
-ARG project=auth-proxy
+ARG project=dial-auth-proxy
 ENV project=${project}
 
-COPY ./$project /opt/deltix/$project
-COPY startup.sh /opt/deltix/$project/startup.sh
+COPY ./build/install/$project /opt/deltix/$project
+COPY ./src/main/docker/startup.sh /opt/deltix/$project/startup.sh
 RUN chmod +x /opt/deltix/$project/startup.sh \
     && apk add --no-cache curl su-exec \
     && chmod +s /sbin/su-exec \
