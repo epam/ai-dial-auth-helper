@@ -1,5 +1,5 @@
 server:
-  hostUrl: "http://dial-auth-proxy"
+  hostUrl: "http://localhost:4088"
   port: 4088
 
 oauth2:

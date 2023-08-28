@@ -53,12 +53,10 @@ public class UserController {
             final DecodedJWT decodedJWT = JWT.decode(token);
             authProvider.verifyJWTToken(decodedJWT);
             Claim idpClaim = decodedJWT.getClaim("idp");
-            if (idpClaim == null || idpClaim.isNull()) {
-                return ResponseEntity.status(400).body("Claim idp not found in JWT token");
-            }
             Claim idpAliasClaim = decodedJWT.getClaim("idpAlias");
-            if (idpAliasClaim == null || idpAliasClaim.isNull()) {
-                return ResponseEntity.status(400).body("Claim idpAlias not found in JWT token");
+            if (isClaimMissing(idpClaim) || isClaimMissing(idpAliasClaim)) {
+                UserInfoDto userInfoDto = fromKeyCloakToken(decodedJWT);
+                return new ResponseEntity<>(userInfoDto, HttpStatus.OK);
             }
             IdentityProvider identityProvider = IdentityProviderFactory.createIdentityProvider(idpClaim.asString());
             String idpAccessToken = authProvider.exchangeToken(token, idpAliasClaim.asString());
@@ -74,5 +72,17 @@ public class UserController {
 
             return ResponseEntity.status(status).body(errorDto);
         }
+    }
+
+    private UserInfoDto fromKeyCloakToken(DecodedJWT jwt) {
+        UserInfoDto userInfoDto = new UserInfoDto();
+        userInfoDto.setSub(jwt.getSubject());
+        userInfoDto.setName(jwt.getClaim("preferred_username").asString());
+        userInfoDto.setEmail(jwt.getClaim("email").asString());
+        return userInfoDto;
+    }
+
+    private static boolean isClaimMissing(Claim claim) {
+        return claim == null || claim.isMissing() || claim.isNull();
     }
 }
