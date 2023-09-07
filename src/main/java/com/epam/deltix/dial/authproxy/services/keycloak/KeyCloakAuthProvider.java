@@ -52,8 +52,7 @@ public class KeyCloakAuthProvider extends BaseAuthProvider {
 
     @Override
     public UserInfoDto getUserInfo(String accessToken) throws Exception {
-        String token = Utils.getTokenFromAuth(accessToken);
-        final DecodedJWT decodedJWT = JWT.decode(token);
+        final DecodedJWT decodedJWT = JWT.decode(accessToken);
         verifyJWTToken(decodedJWT);
         Claim idpClaim = decodedJWT.getClaim("idp");
         Claim idpAliasClaim = decodedJWT.getClaim("idpAlias");
@@ -61,7 +60,7 @@ public class KeyCloakAuthProvider extends BaseAuthProvider {
             fromKeyCloakToken(decodedJWT);
         }
         IdentityProvider identityProvider = IdentityProviderFactory.createIdentityProvider(idpClaim.asString());
-        String idpAccessToken = exchangeToken(token, idpAliasClaim.asString());
+        String idpAccessToken = exchangeToken(accessToken, idpAliasClaim.asString());
         UserInfoDto userInfo = identityProvider.getUserInfo(idpAccessToken);
         userInfo.setSub(decodedJWT.getSubject());
         return userInfo;
