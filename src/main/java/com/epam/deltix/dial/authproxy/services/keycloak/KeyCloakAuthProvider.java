@@ -67,7 +67,7 @@ public class KeyCloakAuthProvider extends BaseAuthProvider {
         return userInfo;
     }
 
-    private UserInfoDto fromKeyCloakToken(DecodedJWT jwt) {
+    private static UserInfoDto fromKeyCloakToken(DecodedJWT jwt) {
         UserInfoDto userInfoDto = new UserInfoDto();
         userInfoDto.setSub(jwt.getSubject());
         userInfoDto.setName(jwt.getClaim("preferred_username").asString());
