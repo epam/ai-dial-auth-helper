@@ -27,6 +27,10 @@ jar {
     }
 }
 
+application {
+    mainClass = "com.epam.aidial.auth.helper.AuthProxy"
+}
+
 repositories {
     mavenCentral()
 }
