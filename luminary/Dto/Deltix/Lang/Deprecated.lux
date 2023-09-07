@@ -1,4 +1,0 @@
-namespace Deltix.Lang;
-
-decorator Deprecated {
-}

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PROJECT_NAME="dial-auth-proxy"
-CLASS_NAME=deltix.cortex.authproxy.AuthProxy
+CLASS_NAME=com.epam.deltix.dial.authproxy.AuthProxy
 
 echo "JAVA_ARGS=" $JAVA_ARGS
 
