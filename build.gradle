@@ -2,22 +2,17 @@ plugins {
     id "org.owasp.dependencycheck" version "${dependencyCheckVersion}"
     id "com.github.hierynomus.license" version "${licensePluginVersion}"
     id "com.github.spotbugs" version "${spotbugsVersion}"
+    id "java"
+    id "application"
 }
-
-apply plugin: 'java'
-apply plugin: 'distribution'
 
 sourceCompatibility = 11
 targetCompatibility = 11
 
-ext {
-    dockerImageName = "${projectName}"
-}
-
-group = 'com.epam.deltix.dial'
+group = 'com.epam.aidial'
+version = '1.0.0'
 
 configurations {
-    generator
     integrationTestImplementation.extendsFrom(testImplementation)
     integrationTestRuntimeOnly.extendsFrom(testRuntimeOnly)
     all*.exclude group: "ch.qos.logback"
@@ -26,47 +21,14 @@ configurations {
 }
 
 jar {
-    version = project.version
     manifest {
         attributes 'Implementation-Title': "${projectTitle}",
                 'Implementation-Version': archiveVersion
     }
 }
 
-distributions {
-    main {
-        distributionBaseName = "${projectName}"
-        contents {
-            into('/bin') {
-                from 'bin/'
-            }
-            into('/lib') {
-                from project.jar
-                from project.configurations.runtimeClasspath
-            }
-        }
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir 'src/main/java'
-        }
-    }
-    integrationTest {
-        java {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-            srcDir file('src/integration-test/java')
-        }
-        resources.srcDir file('src/integration-test/resources')
-    }
-}
-
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
