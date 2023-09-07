@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
 @EnableScheduling
-@ComponentScan({"com.epam.deltix.dial.authproxy"})
+@ComponentScan({"com.epam.aidial.auth.helper"})
 public class AuthProxy {
     static {
         try {
