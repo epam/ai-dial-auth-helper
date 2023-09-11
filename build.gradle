@@ -2,29 +2,17 @@ plugins {
     id "org.owasp.dependencycheck" version "${dependencyCheckVersion}"
     id "com.github.hierynomus.license" version "${licensePluginVersion}"
     id "com.github.spotbugs" version "${spotbugsVersion}"
-    id "com.bmuschko.docker-remote-api" version "${dockerApiVersion}"
+    id "java"
+    id "application"
 }
-
-apply plugin: 'java'
-apply plugin: 'distribution'
-
-apply from: "$rootDir/gradle/Deltix.gradle"
-apply from: "$rootDir/gradle/License.gradle"
-apply from: "$rootDir/gradle/Release.gradle"
-apply from: "$rootDir/gradle/DockerSupport.gradle"
 
 sourceCompatibility = 11
 targetCompatibility = 11
 
-ext {
-    dockerImageName = "${projectName}"
-}
-
-group = 'deltix'
+group = 'com.epam.aidial'
+version = '1.0.0'
 
 configurations {
-    luminary
-    generator
     integrationTestImplementation.extendsFrom(testImplementation)
     integrationTestRuntimeOnly.extendsFrom(testRuntimeOnly)
     all*.exclude group: "ch.qos.logback"
@@ -33,68 +21,31 @@ configurations {
 }
 
 jar {
-    version = project.version
     manifest {
         attributes 'Implementation-Title': "${projectTitle}",
                 'Implementation-Version': archiveVersion
     }
 }
 
-distributions {
-    main {
-        distributionBaseName = "${projectName}"
-        contents {
-            into('/bin') {
-                from 'bin/'
-            }
-            into('/lib') {
-                from project.jar
-                from project.configurations.runtimeClasspath
-            }
-        }
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir 'src/main/java'
-            srcDir "$buildDir/generated-src/dto"
-        }
-    }
-    integrationTest {
-        java {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-            srcDir file('src/integration-test/java')
-        }
-        resources.srcDir file('src/integration-test/resources')
-    }
+application {
+    mainClass = "com.epam.aidial.auth.helper.AuthProxy"
 }
 
 repositories {
     mavenCentral()
-    mavenLocal()
-    mavenDeltix("epm-rtc-java")
-    maven {
-        url "https://jitpack.io"
-    }
 }
 
 dependencies {
-    implementation("deltix-protocol:deltix-protocol-dto-runtime:$protocolGeneratorsVersion")
-    luminary("deltix-protocol:deltix-protocol-generator:$protocolGeneratorsVersion:luminary")
-    generator("deltix-protocol:deltix-protocol-generator:$protocolGeneratorsVersion")
 
     compileOnly("com.google.code.findbugs:annotations:${findbugsAnnotationsVersion}")
 
     // http://find-sec-bugs.github.io
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findSecBugsVersion}"
 
-    implementation("deltix:deltix-gflog-core:${gflogVersion}")
-    implementation("deltix:deltix-gflog-jcl:${gflogVersion}")
-    implementation("deltix:deltix-gflog-jul:${gflogVersion}")
-    implementation("deltix:deltix-gflog-slf4j:${gflogVersion}")
+    implementation("com.epam.deltix:gflog-core:${gflogVersion}")
+    implementation("com.epam.deltix:gflog-jcl:${gflogVersion}")
+    implementation("com.epam.deltix:gflog-jul:${gflogVersion}")
+    implementation("com.epam.deltix:gflog-slf4j:${gflogVersion}")
 
     implementation("javax.ws.rs:javax.ws.rs-api:${rsVersion}")
     implementation("jakarta.validation:jakarta.validation-api:${jakartaValidationVersion}")
@@ -111,23 +62,6 @@ dependencies {
     testImplementation("junit:junit:${junitVersion}")
     testImplementation("com.tngtech.java:junit-dataprovider:${junitDataproviderVersion}")
 }
-
-task generateDto(type: JavaExec) {
-    def searchPath = configurations.luminary.files.inject([]) { list, item ->
-        list = list + item.getPath()
-    }.join(System.getProperty("path.separator"))
-
-    logger.info("LUMINARY_SEARCH_PATH=$searchPath")
-    environment LUMINARY_SEARCH_PATH: searchPath
-
-    mainClass.set("deltix.dto.generator.DtoGenerator")
-    classpath = configurations.generator
-    args = ["$rootDir/luminary/Dto/Project.json", "$rootDir/luminary/Dto/Java.DTO.json", "$buildDir/generated-src/dto"]
-}
-
-task generate(dependsOn: [generateDto]) {
-}
-compileJava.dependsOn generate
 
 dependencyCheck {
     if (project.hasProperty("failOnHighCVSS") && project.getProperty("failOnHighCVSS") == 'true') {
@@ -160,12 +94,4 @@ tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
         xml.required = false
         html.required = true
     }
-}
-
-task prepareFilesForDocker(type: Copy) {
-    group 'docker'
-    dependsOn ':installDist'
-    into './build/docker'
-    into ('') { from "./src/main/docker/startup.sh" }
-    from './build/install/'
 }
