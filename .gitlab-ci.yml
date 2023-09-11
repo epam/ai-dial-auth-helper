@@ -82,11 +82,11 @@ destroy_review:
   stage: build
   image: ${JAVA_IMAGE}
   script:
-    - ./gradlew installDist --parallel
+    - ./gradlew build --parallel
   artifacts:
     expire_in: 1 day
     paths:
-      - build/*
+      - build/distributions/aidial-auth-helper-*.tar
   cache:
     key: ${PROJECT_NAME}"-gradle-java"
     paths:
@@ -115,7 +115,7 @@ publish:
     - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
   script:
     - imageUrl=$REPOSITORY/${DOCKER_PATH}
-    - docker build -t $imageUrl:${DOCKER_TAG} -t $imageUrl:${DOCKER_ADDITIONAL_TAG} -f ${DOCKERFILE_PATH}/Dockerfile .
+    - docker build -t $imageUrl:${DOCKER_TAG} -t $imageUrl:${DOCKER_ADDITIONAL_TAG} .
     - docker push $imageUrl:${DOCKER_TAG}
     - docker push $imageUrl:${DOCKER_ADDITIONAL_TAG}
   rules:

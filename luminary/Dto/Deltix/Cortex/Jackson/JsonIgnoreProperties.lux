@@ -1,6 +1,0 @@
-namespace Deltix.Cortex.Jackson;
-
-[DecoratorUsage(ValidOn = { DecoratorTarget.CLASS })]
-decorator JsonIgnoreProperties {
-    Boolean IgnoreUnknown;
-}
