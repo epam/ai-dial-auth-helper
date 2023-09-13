@@ -1,6 +1,5 @@
-# AuthProxy
+# Overview
 
-### Version 1.0.0
 AuthProxy is a proxy service that implements OpenID-compatible Web API endpoints to avoid direct interaction with the AuthProviders' APIs, such as the KeyCloak API.
 
 One of the primary benefits of using AuthProxy is the enrichment of user info with additional fields such as **jobTitile** and **picture**.
@@ -24,7 +23,30 @@ Currently, AuthProxy provides two public routes:
 
 **Please note that AuthProxy has been tested with Microsoft Graph API only.**
 
-### App Configuration
+# Developer env
+
+- Open JDK 11+
+- Gradle 7+
+
+# Build
+
+```
+ ./gradlew clean build
+```
+
+# Test
+
+```
+ ./gradlew test
+```
+
+# Run
+
+```
+  ./gradlew run
+```
+
+# Configure
 ##### application.yaml
 
 
