@@ -17,16 +17,18 @@ public class ExceptionToErrorDtoConverter {
 
     private static ErrorDto getErrorDtoOrNull(Throwable ex) {
         if (ex instanceof WebApplicationException) {
-            final WebApplicationException wae = (WebApplicationException)ex;
+            final WebApplicationException wae = (WebApplicationException) ex;
             Object entry = wae.getResponse().getEntity();
 
-            if (entry instanceof ErrorDto)
+            if (entry instanceof ErrorDto) {
                 return (ErrorDto) entry;
+            }
         }
         final Throwable cause = ex.getCause();
 
-        if (cause != null && cause != ex)
+        if (cause != null && cause != ex) {
             return getErrorDtoOrNull(cause);
+        }
 
         return null;
     }

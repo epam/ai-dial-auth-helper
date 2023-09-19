@@ -1,11 +1,11 @@
 package com.epam.aidial.auth.helper.controllers;
 
-import com.epam.aidial.auth.helper.error.ExceptionToErrorDtoConverter;
-import com.epam.aidial.auth.helper.services.AuthProvider;
-import com.epam.aidial.auth.helper.utils.Utils;
 import com.epam.aidial.auth.helper.dto.ErrorDto;
 import com.epam.aidial.auth.helper.dto.UserInfoDto;
+import com.epam.aidial.auth.helper.error.ExceptionToErrorDtoConverter;
 import com.epam.aidial.auth.helper.error.ExceptionToHttpStatusConverter;
+import com.epam.aidial.auth.helper.services.AuthProvider;
+import com.epam.aidial.auth.helper.utils.Utils;
 import com.epam.deltix.gflog.api.Log;
 import com.epam.deltix.gflog.api.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;

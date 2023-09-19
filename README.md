@@ -31,7 +31,7 @@ Currently, AuthProxy provides two public routes:
 # Build
 
 ```
- ./gradlew clean build
+ ./gradlew clean build check
 ```
 
 # Test

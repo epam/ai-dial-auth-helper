@@ -12,14 +12,16 @@ public class Utils {
     public static final String BEARER = "bearer ";
 
     public static String getTokenFromAuth(String auth) {
-        if (auth == null)
+        if (auth == null) {
             return null;
-        if (auth.regionMatches(true, 0, BEARER, 0, BEARER.length()))
+        }
+        if (auth.regionMatches(true, 0, BEARER, 0, BEARER.length())) {
             return auth.substring(BEARER.length());
+        }
         return null;
     }
 
-    public static String decodeToJson(final String base64){
+    public static String decodeToJson(final String base64) {
         return StringUtils.newStringUtf8(Base64.decodeBase64(base64));
     }
 

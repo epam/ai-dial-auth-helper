@@ -26,7 +26,7 @@ public class WellKnownControllerTest {
 
     @Test
     public void testGetOpenIdConfiguration_Success() {
-        ResponseEntity<String> openIdConfigRes =new ResponseEntity<>("{\"userinfo_endpoint\": \"http://host1/user-info\"}", HttpStatus.OK);
+        ResponseEntity<String> openIdConfigRes = new ResponseEntity<>("{\"userinfo_endpoint\": \"http://host1/user-info\"}", HttpStatus.OK);
         when(authProvider.getOpenidConfiguration()).thenReturn(openIdConfigRes);
         when(serverConfig.getHostUrl()).thenReturn("http://localhost");
         ResponseEntity<Object> res = controller.getOpenIdConfiguration();
@@ -37,7 +37,7 @@ public class WellKnownControllerTest {
 
     @Test
     public void testGetOpenIdConfiguration_Fail() {
-        ResponseEntity<String> openIdConfigRes =new ResponseEntity<>("resource not found", HttpStatus.NOT_FOUND);
+        ResponseEntity<String> openIdConfigRes = new ResponseEntity<>("resource not found", HttpStatus.NOT_FOUND);
         when(authProvider.getOpenidConfiguration()).thenReturn(openIdConfigRes);
         ResponseEntity<Object> res = controller.getOpenIdConfiguration();
         assertNotNull(res);

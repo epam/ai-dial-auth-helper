@@ -4,9 +4,9 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.epam.aidial.auth.helper.config.AuthProviderConfig;
+import com.epam.aidial.auth.helper.dto.UserInfoDto;
 import com.epam.aidial.auth.helper.services.BaseAuthProvider;
 import com.epam.aidial.auth.helper.utils.Utils;
-import com.epam.aidial.auth.helper.dto.UserInfoDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpEntity;
@@ -50,17 +50,17 @@ public class KeyCloakAuthProvider extends BaseAuthProvider {
 
     @Override
     public UserInfoDto getUserInfo(String accessToken) throws Exception {
-        final DecodedJWT decodedJWT = JWT.decode(accessToken);
-        verifyJWTToken(decodedJWT);
-        Claim idpClaim = decodedJWT.getClaim("idp");
-        Claim idpAliasClaim = decodedJWT.getClaim("idpAlias");
+        final DecodedJWT decodedJwt = JWT.decode(accessToken);
+        verifyJwtToken(decodedJwt);
+        Claim idpClaim = decodedJwt.getClaim("idp");
+        Claim idpAliasClaim = decodedJwt.getClaim("idpAlias");
         if (Utils.isClaimMissing(idpClaim) || Utils.isClaimMissing(idpAliasClaim)) {
-            fromKeyCloakToken(decodedJWT);
+            fromKeyCloakToken(decodedJwt);
         }
         IdentityProvider identityProvider = IdentityProviderFactory.createIdentityProvider(idpClaim.asString());
         String idpAccessToken = exchangeToken(accessToken, idpAliasClaim.asString());
         UserInfoDto userInfo = identityProvider.getUserInfo(idpAccessToken);
-        userInfo.setSub(decodedJWT.getSubject());
+        userInfo.setSub(decodedJwt.getSubject());
         return userInfo;
     }
 

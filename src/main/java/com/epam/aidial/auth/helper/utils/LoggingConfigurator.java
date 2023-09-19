@@ -16,8 +16,9 @@ public final class LoggingConfigurator {
         }
 
         final String targetPath = System.getProperty("gflog.fileAppender.targetPath");
-        if (targetPath == null)
+        if (targetPath == null) {
             System.setProperty("gflog.fileAppender.targetPath", defaultPath);
+        }
 
         final URL resource = clazz.getClassLoader().getResource("config/gflog.xml");
         if (resource == null) {
@@ -27,8 +28,7 @@ public final class LoggingConfigurator {
 
         if (resource.toString().startsWith("jar:")) {
             final File file = File.createTempFile("tempfile", ".tmp");
-            try (final InputStream input = resource.openStream();
-                 final FileOutputStream output = new FileOutputStream(file)) {
+            try (final InputStream input = resource.openStream(); final FileOutputStream output = new FileOutputStream(file)) {
                 int read;
                 byte[] buffer = new byte[0x1000];
 
@@ -38,8 +38,9 @@ public final class LoggingConfigurator {
             }
 
             LogConfigurator.configure(file.toURI().toURL().getFile());
-            if (!file.delete())
+            if (!file.delete()) {
                 System.err.println("Cannot delete temporary file: " + file.getAbsolutePath());
+            }
         } else {
             LogConfigurator.configure(resource.getFile());
         }

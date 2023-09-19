@@ -4,6 +4,7 @@ plugins {
     id "com.github.spotbugs" version "${spotbugsVersion}"
     id "java"
     id "application"
+    id 'checkstyle'
 }
 
 sourceCompatibility = 11
@@ -18,6 +19,11 @@ configurations {
     all*.exclude group: "ch.qos.logback"
     all*.exclude group: "org.springframework", module: "spring-jcl"
     all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
+}
+
+checkstyle {
+    configDirectory = file("$rootProject.projectDir/checkstyle")
+    toolVersion '9.3';    // your choice here
 }
 
 jar {
