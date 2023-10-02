@@ -26,6 +26,12 @@ checkstyle {
     toolVersion '9.3';    // your choice here
 }
 
+license {
+    exclude "**/*"
+    skipExistingHeaders true
+    ignoreFailures true
+}
+
 jar {
     manifest {
         attributes 'Implementation-Title': "${projectTitle}",
