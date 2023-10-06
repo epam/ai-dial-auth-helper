@@ -1,0 +1,12 @@
+server:
+  hostUrl: "http://localhost:4088"
+  port: 4088
+
+oauth2:
+  providerUri: "http://localhost:8080/realms/your_realm"
+  clientId: "chatbot-ui"
+  clientSecret: "your_client_secret"
+  jwksUriPath: "jwks_uri"
+
+scheduled:
+  poolSize: 2
