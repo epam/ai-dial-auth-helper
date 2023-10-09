@@ -1,4 +1,4 @@
-FROM amazoncorretto:11-alpine3.17
+FROM eclipse-temurin:17-jdk-alpine
 
 ADD ./build/distributions/aidial-auth-helper-*.tar /opt/epam/aidial/
 RUN mv /opt/epam/aidial/aidial-auth-helper-*/* /opt/epam/aidial/
