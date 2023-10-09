@@ -1,7 +1,4 @@
 plugins {
-    id "org.owasp.dependencycheck" version "${dependencyCheckVersion}"
-    id "com.github.hierynomus.license" version "${licensePluginVersion}"
-    id "com.github.spotbugs" version "${spotbugsVersion}"
     id "java"
     id "application"
     id 'checkstyle'
@@ -26,12 +23,6 @@ checkstyle {
     toolVersion '9.3';    // your choice here
 }
 
-license {
-    exclude "**/*"
-    skipExistingHeaders true
-    ignoreFailures true
-}
-
 jar {
     manifest {
         attributes 'Implementation-Title': "${projectTitle}",
@@ -48,11 +39,6 @@ repositories {
 }
 
 dependencies {
-
-    compileOnly("com.google.code.findbugs:annotations:${findbugsAnnotationsVersion}")
-
-    // http://find-sec-bugs.github.io
-    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findSecBugsVersion}"
 
     implementation("com.epam.deltix:gflog-core:${gflogVersion}")
     implementation("com.epam.deltix:gflog-jcl:${gflogVersion}")
@@ -78,37 +64,4 @@ dependencies {
     testImplementation("junit:junit:${junitVersion}")
     testImplementation("com.tngtech.java:junit-dataprovider:${junitDataproviderVersion}")
     testImplementation("org.mockito:mockito-core:5.5.0")
-}
-
-dependencyCheck {
-    if (project.hasProperty("failOnHighCVSS") && project.getProperty("failOnHighCVSS") == 'true') {
-        failBuildOnCVSS = 7
-    }
-    skipProjects = []
-    suppressionFile = file("$rootDir/dependency-check-suppression-file.xml")
-    skipConfigurations = [ "luminary" ]
-    analyzers {
-        assemblyEnabled = false
-    }
-}
-
-spotbugs {
-    effort = "max"
-    reportLevel = "medium"
-    ignoreFailures = project.findProperty('failOnSpotBugs') == null // gradle -PfailOnSpotBugs ..
-    //sourceSets = sourceSets.main // exclude tests
-    excludeFilter = file("$rootDir/spotbugs-excludes.xml")
-}
-
-task collectSpotbugs(type: Copy) {
-    from "$project.buildDir/reports/spotbugs/main.html"
-    into "$rootProject.buildDir/reports/spotbugs"
-    rename { String fileName -> "${project.name}.html" }
-}
-
-tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-    reports {
-        xml.required = false
-        html.required = true
-    }
 }
