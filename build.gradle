@@ -7,8 +7,8 @@ plugins {
     id 'checkstyle'
 }
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 17
+targetCompatibility = 17
 
 group = 'com.epam.aidial'
 version = '1.0.0'
@@ -62,12 +62,16 @@ dependencies {
     implementation("javax.ws.rs:javax.ws.rs-api:${rsVersion}")
     implementation("jakarta.validation:jakarta.validation-api:${jakartaValidationVersion}")
 
+    constraints {
+        implementation('org.yaml:snakeyaml:2.2') {
+            because 'previous version 1.33 has security issue CVE-2022-1471'
+        }
+    }
+
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
-    implementation("org.springframework.security.oauth:spring-security-oauth2:${springSecurityOAuthVersion}")
-    implementation("org.springframework.security:spring-security-jwt:1.1.0.RELEASE") // override old one from jwk-token-store
 
     implementation("com.auth0:java-jwt:4.4.0")
-    implementation("com.auth0:jwks-rsa:0.22.0")
+    implementation("com.auth0:jwks-rsa:0.22.1")
 
     runtimeOnly("org.glassfish.jersey.core:jersey-common:${glassfishVersion}")
 

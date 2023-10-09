@@ -61,7 +61,7 @@ public class WellKnownController {
         } catch (RestClientResponseException e) {
             return new ResponseEntity<>(e.getResponseBodyAsString(), HttpStatus.valueOf(e.getRawStatusCode()));
         } catch (Throwable e) {
-            LOG.warn().append(e).commit();
+            LOG.warn("error occured at getting OpenId configuration: %s").with(e);
 
             final HttpStatus status = ExceptionToHttpStatusConverter.getStatus(e);
             final ErrorDto errorDto = ExceptionToErrorDtoConverter.getErrorDto(e);
