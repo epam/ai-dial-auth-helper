@@ -26,7 +26,7 @@ Currently, AuthProxy provides two public routes:
 # Developer env
 
 - Open JDK 17+
-- Gradle 7+
+- Gradle 8+
 
 # Build
 
