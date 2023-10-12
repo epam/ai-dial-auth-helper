@@ -13,15 +13,15 @@ RUN mkdir /build && tar -xf /home/gradle/src/build/distributions/aidial-auth-hel
 
 FROM eclipse-temurin:17-jdk-alpine
 
-WORKDIR /opt/epam/aidial
+WORKDIR /app
 
-RUN addgroup -S aidial --gid 1801 \
-    && adduser -D -H -S aidial -G aidial -u 1801
+RUN addgroup -S aidial --gid 1001 \
+    && adduser -D -H -S aidial -G aidial -u 1001
 
 COPY --from=builder --chown=aidial:aidial /build/ .
 
-RUN chown -R aidial:aidial /opt/epam/aidial
+RUN chown -R aidial:aidial /app
 
 USER aidial
 
-ENTRYPOINT ["/opt/epam/aidial/bin/aidial-auth-helper"]
+ENTRYPOINT ["/app/bin/aidial-auth-helper"]
