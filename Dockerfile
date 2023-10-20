@@ -1,15 +1,27 @@
-FROM amazoncorretto:11-alpine3.17
+FROM gradle:8.3.0-jdk17-alpine as cache
+WORKDIR /home/gradle/src
+ENV GRADLE_USER_HOME /cache
+COPY build.gradle settings.gradle ./
+RUN gradle --no-daemon build --stacktrace
 
-ADD ./build/distributions/aidial-auth-helper-*.tar /opt/epam/aidial/
-RUN mv /opt/epam/aidial/aidial-auth-helper-*/* /opt/epam/aidial/
-RUN rmdir /opt/epam/aidial/aidial-auth-helper-*
+FROM gradle:8.3.0-jdk17-alpine as builder
+COPY --from=cache /cache /home/gradle/.gradle
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
+RUN gradle --no-daemon build --stacktrace -PdisableCompression=true
+RUN mkdir /build && tar -xf /home/gradle/src/build/distributions/aidial-auth-helper-*.tar --strip-components=1 -C /build
 
-RUN addgroup -S aidial --gid 1801 \
-    && adduser -D -H -S aidial -G aidial -u 1801 \
-    && chown aidial:aidial -R /opt/epam/aidial
+FROM eclipse-temurin:17-jdk-alpine
+
+WORKDIR /app
+
+RUN addgroup -S aidial --gid 1001 \
+    && adduser -D -H -S aidial -G aidial -u 1001
+
+COPY --from=builder --chown=aidial:aidial /build/ .
+
+RUN chown -R aidial:aidial /app
 
 USER aidial
 
-WORKDIR /opt/epam/aidial
-
-ENTRYPOINT ["/opt/epam/aidial/bin/aidial-auth-helper"]
+ENTRYPOINT ["/app/bin/aidial-auth-helper"]

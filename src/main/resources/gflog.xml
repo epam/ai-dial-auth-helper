@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <appender name="fileAppender" factory="com.epam.deltix.gflog.core.appender.DailyRollingFileAppenderFactory" file="logs/authproxy.log" append="true">
-        <layout template="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c{1}: %m%n" zoneId="UTC"/>
-    </appender>
 
     <appender name="consoleAppender" factory="com.epam.deltix.gflog.core.appender.ConsoleAppenderFactory" bufferCapacity="10240">
         <layout template="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c{1}: %m%n" zoneId="UTC"/>
     </appender>
 
     <appender name="safeAppender" factory="com.epam.deltix.gflog.core.appender.SafeAppenderFactory" maxEntriesPerSecond="10000">
-        <appender-ref ref="fileAppender"/>
         <appender-ref ref="consoleAppender"/>
     </appender>
 

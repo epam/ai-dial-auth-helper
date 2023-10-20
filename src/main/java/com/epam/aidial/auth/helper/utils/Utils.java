@@ -1,8 +1,6 @@
 package com.epam.aidial.auth.helper.utils;
 
 import com.auth0.jwt.interfaces.Claim;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.StringUtils;
 
 public class Utils {
     private Utils() {
@@ -19,10 +17,6 @@ public class Utils {
             return auth.substring(BEARER.length());
         }
         return null;
-    }
-
-    public static String decodeToJson(final String base64) {
-        return StringUtils.newStringUtf8(Base64.decodeBase64(base64));
     }
 
     public static boolean isNullOrEmpty(String s) {

@@ -48,7 +48,7 @@ public class UserController {
             UserInfoDto userInfo = authProvider.getUserInfo(token);
             return new ResponseEntity<>(userInfo, HttpStatus.OK);
         } catch (Throwable e) {
-            LOG.warn().append(e).commit();
+            LOG.warn("error occurred at getting user info: %s").with(e);
 
             final HttpStatus status = ExceptionToHttpStatusConverter.getStatus(e);
             final ErrorDto errorDto = ExceptionToErrorDtoConverter.getErrorDto(e);
