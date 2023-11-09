@@ -1,5 +1,8 @@
 ## KeyCloak Configuration
 
+Auth-helper uses token-exchange API in KeyCloak for access to external IdP. You need to grant permissions for the exchange
+before running auth-helper: https://www.keycloak.org/docs/latest/securing_apps/#_client_to_client_permission
+
 ### Identity Provider
 Go to the target realm in KeyCloak and open "Identity Providers". Choose the tab "Mappers" and create two mappers:
 
