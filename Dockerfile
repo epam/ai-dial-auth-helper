@@ -13,6 +13,8 @@ RUN mkdir /build && tar -xf /home/gradle/src/build/distributions/aidial-auth-hel
 
 FROM eclipse-temurin:17-jdk-alpine
 
+RUN apk update && apk upgrade --no-cache libcrypto3 libssl3
+
 WORKDIR /app
 
 RUN addgroup -S aidial --gid 1001 \
