@@ -44,7 +44,13 @@ dependencies {
         }
     }
 
-    implementation("org.springframework.boot:spring-boot-starter-web:3.1.3")
+    constraints {
+        implementation('ch.qos.logback:logback-classic:1.4.12') {
+            because 'previous version 1.4.11 has security issue CVE-2023-6378'
+        }
+    }
+
+    implementation("org.springframework.boot:spring-boot-starter-web:3.2.0")
 
     implementation("com.auth0:java-jwt:4.4.0")
     implementation("com.auth0:jwks-rsa:0.22.1")
