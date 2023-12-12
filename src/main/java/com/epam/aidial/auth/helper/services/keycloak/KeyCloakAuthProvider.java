@@ -55,7 +55,7 @@ public class KeyCloakAuthProvider extends BaseAuthProvider {
         Claim idpClaim = decodedJwt.getClaim("idp");
         Claim idpAliasClaim = decodedJwt.getClaim("idpAlias");
         if (Utils.isClaimMissing(idpClaim) || Utils.isClaimMissing(idpAliasClaim)) {
-            fromKeyCloakToken(decodedJwt);
+            return fromKeyCloakToken(decodedJwt);
         }
         IdentityProvider identityProvider = IdentityProviderFactory.createIdentityProvider(idpClaim.asString());
         String idpAccessToken = exchangeToken(accessToken, idpAliasClaim.asString());
