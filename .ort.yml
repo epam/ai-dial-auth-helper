@@ -1,0 +1,14 @@
+---
+excludes:
+  scopes:
+  - pattern: "checkstyle"
+    reason: "DEV_DEPENDENCY_OF"
+    comment: "Packages for static code analysis only."
+  - pattern: "test.*"
+    reason: "TEST_DEPENDENCY_OF"
+    comment: "Packages for testing only."
+license_choices:
+  repository_license_choices:
+  - given: EPL-1.0 OR LGPL-2.1-or-later OR GPL-2.0-or-later OR Apache-2.0 OR BSD-3-Clause
+    choice: BSD-3-Clause
+    
