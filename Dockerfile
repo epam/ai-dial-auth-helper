@@ -16,6 +16,9 @@ FROM eclipse-temurin:17-jdk-alpine
 # TODO remove the fix once a new version is released
 RUN apk update && apk upgrade --no-cache libcrypto3 libssl3
 
+# fix CVE-2023-52425
+RUN apk upgrade --no-cache libexpat
+
 WORKDIR /app
 
 RUN addgroup -S aidial --gid 1001 \
