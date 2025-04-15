@@ -12,12 +12,6 @@ RUN gradle --no-daemon build --stacktrace -PdisableCompression=true
 RUN mkdir /build && tar -xf /home/gradle/src/build/distributions/aidial-auth-helper-*.tar --strip-components=1 -C /build
 
 FROM eclipse-temurin:17-jdk-alpine
-# fix CVE-2023-5363
-# TODO remove the fix once a new version is released
-RUN apk update && apk upgrade --no-cache libcrypto3 libssl3
-
-# fix CVE-2023-52425
-RUN apk upgrade --no-cache libexpat
 
 WORKDIR /app
 
@@ -27,6 +21,10 @@ RUN addgroup -S aidial --gid 1001 \
 COPY --from=builder --chown=aidial:aidial /build/ .
 
 RUN chown -R aidial:aidial /app
+
+# upgrade/install packages
+RUN apk update
+RUN apk upgrade --no-cache libcrypto3 libssl3 libexpat binutils
 
 USER aidial
 
