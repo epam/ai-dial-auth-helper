@@ -38,6 +38,7 @@ public class WellKnownController {
 
     /**
      * The well known endpoint can be used to retrieve information for OpenID Connect clients.
+     *
      * <p>
      * Method also substitutes "userinfo_endpoint" field with configured "userinfo_endpoint"
      * </p>
