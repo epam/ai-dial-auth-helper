@@ -1,3 +1,11 @@
+# This project is archived and no longer developed or maintained. 🧊
+
+This project provided a way to add required claims to Keycloak tokens based on claims available in Microsoft Entra ID (formerly Azure AD). Development has now moved to a different repository that uses a different approach based on a Keycloak extension.
+
+This repository is no longer actively maintained and will remain available for reference purposes only. For ongoing development, new features, and updates, please use the new repository:
+
+[ai-dial-keycloak-helpers](https://github.com/epam/ai-dial-keycloak-helpers)
+
 # Overview
 
 AuthProxy is a proxy service that implements OpenID-compatible Web API endpoints to avoid direct interaction with the AuthProviders' APIs, such as the KeyCloak API.
